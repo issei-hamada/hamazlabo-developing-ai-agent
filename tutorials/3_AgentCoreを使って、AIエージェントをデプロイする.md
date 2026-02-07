@@ -5,15 +5,69 @@
 本セクションでは、前手順で作成した AI エージェントを AWS にデプロイし、テスト実行する。
 基盤には Amazon Bedrock AgentCore Runtime を採用し、AWS CDK を使ってデプロイする。
 
-## 3.1. デプロイ準備
+## 3.1. デプロイ用ツールのインストール
+
+### node のインストール
+
+**PC に node が入っていない方のみ、本手順を実施して下さい**
+
+今回は AWS CDK を使う為、node.js が必要。
+uv で python のバージョンを管理するように、node.js でもバージョン管理は重要。
+
+今回は、nvm を使って node をインストールしていく。
+
+- nvm: <https://github.com/nvm-sh/nvm>
+
+**windows の場合**:
+
+1. [リリースノート](https://github.com/coreybutler/nvm-windows/releases)から最新のインストーラをダウンロード
+2. インストーラを実行
+
+- 参考手順: <https://zenn.dev/keison8864/articles/nvm-windows-nodejs-install>
+
+**Linux/macOS の場合**:
+
+```
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
+```
+
+- 参考手順: <https://github.com/nvm-sh/nvm>
+
+**共通手順**:
+
+インストール出来たか確認
+
+```bash
+nvm --version
+```
+
+最新の node をインストール
+
+```bash
+nvm install node
+```
+
+node のインストール確認
+
+```
+node --version
+```
+
+バージョンが表示されれば、node のインストールは完了
 
 ### ライブラリをインストール
 
 AgentCore を使う為のライブラリを追加する。
 
 ```bash
+# 現在のディレクトリを確認
+pwd
+# hamazlabo-developing-ai-agent/agents/lib/app
+
 uv add bedrock-agentcore bedrock-agentcore-starter-toolkit
 ```
+
+## 3.2. デプロイ準備
 
 ### Strands Agents のコードを AgentCore 用に修正
 
@@ -202,7 +256,7 @@ CMD ["opentelemetry-instrument", "python", "-m", "sample_agent"]
 
 AgentCore Runtime を AWS CDK でデプロイする為に必要になる。
 
-## 3.2. エージェントをデプロイ
+## 3.3. エージェントをデプロイ
 
 AWS CDK を使って、AgentCore 一式をデプロイする。
 AI エージェントを AgentCore Runtime にデプロイする為には、ざっくり3通りの手順がある。
@@ -213,12 +267,9 @@ AI エージェントを AgentCore Runtime にデプロイする為には、ざ�
 
 1は簡単だが、本番に組み込むには不向き。
 2は CI/CD と組み合わせて本番にも使えるが、準備が煩雑。
-3は手軽で本番にも使えるが、ソースコードを zip 化する時、ARM ベースでビルドされたライブラリを使う必要がある。
+3は手軽で本番にも使えるが、ソースコードを zip 化する時、ARM でビルドされたライブラリを使う必要がある。
 
 そこで今回は、**deploy-time-build** というサードパーティツールを利用して、2の「ECR リポジトリからデプロイ」する。
-このツールは、コンテナビルドが必要なリソースを、AWS CodeBuild を使ってよしなにビルドする。
-
-今回の場合、/app 配下のアセットを zip 化して S3 にアップロード、AWS CodeBuild でビルドして ECR に格納してくれる。
 
 ### deploy-time-build のアーキテクチャ
 
@@ -258,17 +309,29 @@ npm install
 
 ### (初めて AWS CDK を実行する場合)AWS CDK をセットアップ
 
+AWS CDK を利用する際、事前に CDK が使う IAM ロールや環境変数(のようなもの)を AWS 上に作成しておく必要がある。
+
+以下コマンドは、それらを AWS アカウントに作成する。
+
 ```bash
 npx cdk bootstrap
 ```
 
+各 AWS 環境で一度だけ実行しておけばよい。
+
 ### CFn テンプレート生成
+
+typescript で書かれたテンプレートを、CFn に変換する。
 
 ```bash
 npx cdk synth
 ```
 
+実行後、cdk.out フォルダを確認すると CFn テンプレートが生成されているのを確認出来る。
+
 ### ECR リポジトリ作成
+
+EcrStack をデプロイ。
 
 ```bash
 npx cdk deploy EcrStack
@@ -276,13 +339,13 @@ npx cdk deploy EcrStack
 
 ### AgentCore Runtime デプロイ
 
+AgentStack をデプロイ。
+
 ```bash
 npx cdk deploy AgentStack
 ```
 
-これで
-
-## AgentCore をテスト実行
+## 3.4. AgentCore をテスト実行
 
 ### デプロイした AgentCore Runtime を実行
 
