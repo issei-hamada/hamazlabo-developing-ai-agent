@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
 ```bash
 # Python ファイル実行
-python -u main.py
+uv run python main.py
 ```
 
 **実行時、Anthropic の EULA に関するエラーが表示される場合**:
@@ -70,6 +70,17 @@ python -u main.py
 開設したばかりの AWS アカウントだと、「Anthropic の フォームを書いて submit して下さい」のようなエラーが起きる。
 これは、文字通り Anthropic が用意している Claude の用途アンケートに回答する事で解決出来る。
 モデルカタログ -> Claude を選ぶと表示される……はず。
+
+**MissingDependencyException エラーが発生する場合**:
+
+aws login コマンドで本ワークショップを実施している場合、botocore['crt'] ライブラリが必要。
+(aws login コマンドで AWS SDK を使おうとすると必要)
+
+なので、以下コマンドで追加する。
+
+```bash
+uv add botocore['crt']
+```
 
 ## 2.4. モデルを指定する
 
@@ -122,6 +133,9 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+
+このままだと MaxTokensReachedException が起きるかも。
+今回はトークン設定については割愛。
 
 ### Amazon Bedrock 経由で Google Gemma を利用する
 
@@ -930,13 +944,7 @@ if __name__ == "__main__":
 
 ## 仕上げ: 引数からプロンプトを受け取って対話出来る天気予報士エージェントを作成する
 
-### 必要なライブラリをインストール
-
 argparse: python ファイル実行時、引数を受けられるようにする
-
-```sh
-uv add argparse
-```
 
 ### 天気予報士エージェントのサンプルコードをコピーペーストする
 
