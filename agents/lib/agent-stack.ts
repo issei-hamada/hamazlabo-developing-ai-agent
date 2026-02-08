@@ -155,7 +155,13 @@ export class AgentStack extends cdk.Stack {
       agentRuntimeArtifact: agentcore.AgentRuntimeArtifact.fromEcrRepository(repository), // ECR のリポジトリを指定
       environmentVariables: {
         MEMORY_ID: this.memory.memoryId,
+        MEMORY_REGION: this.region
       },
+    });
+
+    new cdk.CfnOutput(this, 'AgentRuntimeArn', {
+      value: this.agent.agentRuntimeArn,
+      description: 'The ARN of the AgentCore Runtime',
     });
   }
 }

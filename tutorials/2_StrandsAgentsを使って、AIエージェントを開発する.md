@@ -65,6 +65,12 @@ if __name__ == "__main__":
 python -u main.py
 ```
 
+**実行時、Anthropic の EULA に関するエラーが表示される場合**:
+
+開設したばかりの AWS アカウントだと、「Anthropic の フォームを書いて submit して下さい」のようなエラーが起きる。
+これは、文字通り Anthropic が用意している Claude の用途アンケートに回答する事で解決出来る。
+モデルカタログ -> Claude を選ぶと表示される……はず。
+
 ## 2.4. モデルを指定する
 
 Strands Agents では、モジュールを切り替えるだけで様々な LLM に対応出来る。
@@ -75,7 +81,7 @@ Strands Agents では、モジュールを切り替えるだけで様々な LLM 
 from strands import Agent
 from strands.models import BedrockModel
 
-MODEL_ID = "global.anthropic.claude-sonnet-4-20250514-v1:0"
+MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 def main():
     bedrock_model = BedrockModel(
@@ -99,7 +105,7 @@ if __name__ == "__main__":
 from strands import Agent
 from strands.models import BedrockModel
 
-MODEL_ID = "us.amazon.nova-pro-v1:0"
+MODEL_ID = "global.amazon.nova-2-lite-v1:0"
 
 def main():
     bedrock_model = BedrockModel(
@@ -117,13 +123,13 @@ if __name__ == "__main__":
     main()
 ```
 
-### Amazon Bedrock 経由で OpenAI GPT を利用する
+### Amazon Bedrock 経由で Google Gemma を利用する
 
 ```py
 from strands import Agent
 from strands.models import BedrockModel
 
-MODEL_ID = "openai.gpt-oss-120b-1:0"
+MODEL_ID = "google.gemma-3-27b-it"
 
 def main():
     bedrock_model = BedrockModel(
@@ -154,7 +160,7 @@ if __name__ == "__main__":
 from strands import Agent
 from strands.models import BedrockModel
 
-MODEL_ID = "global.anthropic.claude-sonnet-4-20250514-v1:0"
+MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 SYSTEM_PROMPT="""あなたは天文学者です。"""
 
@@ -183,7 +189,7 @@ if __name__ == "__main__":
 from strands import Agent
 from strands.models import BedrockModel
 
-MODEL_ID = "global.anthropic.claude-sonnet-4-20250514-v1:0"
+MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 SYSTEM_PROMPT="""あなたは物理学者です。"""
 
@@ -212,7 +218,7 @@ if __name__ == "__main__":
 from strands import Agent
 from strands.models import BedrockModel
 
-MODEL_ID = "global.anthropic.claude-sonnet-4-20250514-v1:0"
+MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 SYSTEM_PROMPT="""あなたは数学者です。"""
 
@@ -256,7 +262,7 @@ if __name__ == "__main__":
 from strands import Agent
 from strands.models import BedrockModel
 
-MODEL_ID = "global.anthropic.claude-sonnet-4-20250514-v1:0"
+MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 def main():
     bedrock_model = BedrockModel(
@@ -291,7 +297,7 @@ from strands.models import BedrockModel
 
 from strands.session.file_session_manager import FileSessionManager
 
-MODEL_ID = "global.anthropic.claude-sonnet-4-20250514-v1:0"
+MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 # Create a session manager with a unique session ID
 session_manager = FileSessionManager(
@@ -326,7 +332,7 @@ from strands.models import BedrockModel
 
 from strands.session.file_session_manager import FileSessionManager
 
-MODEL_ID = "global.anthropic.claude-sonnet-4-20250514-v1:0"
+MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 # Create a session manager with a unique session ID
 session_manager = FileSessionManager(
@@ -387,7 +393,7 @@ main.py と同じ階層に .sessions というディレクトリが作成され�
 **インストール:**
 
 ```bash
-pip install 'bedrock-agentcore[strands-agents]'
+uv add bedrock-agentcore[strands-agents]
 ```
 
 **AgentCore Memory Session Manager のサンプルコード(今回は動作しません):**
@@ -405,7 +411,7 @@ from bedrock_agentcore.memory.integrations.strands.session_manager import AgentC
 
 import boto3
 
-MODEL_ID = "global.anthropic.claude-sonnet-4-20250514-v1:0"
+MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 # AgentCore Memory を設定
 agentcore_memory_config = AgentCoreMemoryConfig(
@@ -452,7 +458,7 @@ from bedrock_agentcore.memory.integrations.strands.session_manager import AgentC
 
 import boto3
 
-MODEL_ID = "global.anthropic.claude-sonnet-4-20250514-v1:0"
+MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 # AgentCore Memory を設定
 agentcore_memory_config = AgentCoreMemoryConfig(
@@ -522,7 +528,7 @@ from strands.session.file_session_manager import FileSessionManager
 
 from strands.agent.conversation_manager import SlidingWindowConversationManager
 
-MODEL_ID = "global.anthropic.claude-sonnet-4-20250514-v1:0"
+MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 session_manager = FileSessionManager(
     session_id="user-123",
@@ -565,7 +571,7 @@ from strands.session.file_session_manager import FileSessionManager
 
 from strands.agent.conversation_manager import SummarizingConversationManager
 
-MODEL_ID = "global.anthropic.claude-sonnet-4-20250514-v1:0"
+MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 session_manager = FileSessionManager(
     session_id="user-123",
@@ -631,7 +637,7 @@ from strands.models import BedrockModel
 # http_request というコミュニティツールをインポート
 from strands_tools import http_request
 
-MODEL_ID = "global.anthropic.claude-sonnet-4-20250514-v1:0"
+MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 def main():
     bedrock_model = BedrockModel(
@@ -663,7 +669,7 @@ from strands.models import BedrockModel
 # 作成した get_weather_forecast をインポート
 from tools.weather_forecast import get_weather_forecast
 
-MODEL_ID = "global.anthropic.claude-sonnet-4-20250514-v1:0"
+MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 def main():
     bedrock_model = BedrockModel(
@@ -758,7 +764,7 @@ API として AI エージェントを実装した場合、エージェントの
 from strands import Agent
 from strands.models import BedrockModel
 
-MODEL_ID = "global.anthropic.claude-sonnet-4-20250514-v1:0"
+MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 def main():
     bedrock_model = BedrockModel(
@@ -795,7 +801,7 @@ import asyncio
 from strands import Agent
 from strands.models import BedrockModel
 
-MODEL_ID = "global.anthropic.claude-sonnet-4-20250514-v1:0"
+MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 
 bedrock_model = BedrockModel(
@@ -848,7 +854,7 @@ import asyncio
 from strands import Agent
 from strands.models import BedrockModel
 
-MODEL_ID = "global.anthropic.claude-sonnet-4-20250514-v1:0"
+MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 
 bedrock_model = BedrockModel(
@@ -890,7 +896,7 @@ from pydantic import BaseModel, Field
 from strands import Agent
 from strands.models import BedrockModel
 
-MODEL_ID = "global.anthropic.claude-sonnet-4-20250514-v1:0"
+MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 # クラスとして、欲しいレスポンス形式を定義
 class PersonInfo(BaseModel):
@@ -906,19 +912,20 @@ def main():
     agent = Agent(model=bedrock_model)
 
     # Ask the agent a question
-    result = agent.structured_output(
-        PersonInfo,
-        "ハリー・ポッターの登場人物「ロン・ウィズリー」について、名前と性別、所属寮を教えて下さい。"
+    result = agent(
+        "ハリー・ポッターの登場人物「ロン・ウィズリー」について、名前と性別、所属寮を教えて下さい。",
+        structured_output_model=PersonInfo
     )
-    return result
+    person_info: PersonInfo = result.structured_output
+    return person_info
 
 
 if __name__ == "__main__":
     response = main()
     print(f'response: {response}')
-    print(f"Name: {response.name}")
-    print(f"Gender: {response.gender}")
-    print(f"House: {response.house}")
+    print(f'response: {response.name}')
+    print(f'response: {response.gender}')
+    print(f'response: {response.house}')
 ```
 
 ## 仕上げ: 引数からプロンプトを受け取って対話出来る天気予報士エージェントを作成する
@@ -947,7 +954,7 @@ from strands.agent.conversation_manager import SlidingWindowConversationManager 
 from datetime import datetime
 from tools.weather_forecast import get_weather_forecast # 天気予報ツール
 
-MODEL_ID = "global.anthropic.claude-sonnet-4-20250514-v1:0"
+MODEL_ID = "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
 
 SYSTEM_PROMPT="""
 あなたは親しみやすく正確な気象予報士です。ユーザーから都道府県名を受け取り、天気予報情報を提供します。
@@ -1060,7 +1067,7 @@ if __name__ == "__main__":
 ### 実行してみる
 
 ```sh
-python -u main.py '{"sessionId": "52433935-c9fd-480c-e3d2-d8a91369b3db", "prompt": "今日の横浜の天気を教えて下さい。"}'
+uv run python main.py '{"sessionId": "52433935-c9fd-480c-e3d2-d8a91369b3db", "prompt": "今日の横浜の天気を教えて下さい。"}'
 ```
 
 ---

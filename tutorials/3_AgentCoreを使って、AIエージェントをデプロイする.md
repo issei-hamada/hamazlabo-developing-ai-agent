@@ -64,10 +64,18 @@ AgentCore を使う為のライブラリを追加する。
 pwd
 # hamazlabo-developing-ai-agent/agents/lib/app
 
-uv add bedrock-agentcore bedrock-agentcore-starter-toolkit
+uv add bedrock-agentcore
 ```
 
 ## 3.2. デプロイ準備
+
+### main.py をリネーム
+
+分かりやすいように、main.py を sample_agent.py にリネームする。
+
+```bash
+mv main.py sample_agent.py
+```
 
 ### Strands Agents のコードを AgentCore 用に修正
 
@@ -77,6 +85,7 @@ Fast API で動作する Strands Agents のコードを、AgentCore 対応に修
 ```py
 import argparse
 import json
+import os
 
 from strands import Agent
 from strands.models import BedrockModel
@@ -159,6 +168,8 @@ SYSTEM_PROMPT="""
 
 @app.entrypoint # エージェントを呼び出すエントリポイント関数を指定
 def invoke_agent(payload):
+    session_id=payload.get("sessionId")
+    actor_id=payload.get("actorId")
     now = datetime.now()
     system_prompt = SYSTEM_PROMPT + f"""
     現在の時刻: {now}
@@ -171,9 +182,9 @@ def invoke_agent(payload):
 
     # AgentCore Memory を設定
     agentcore_memory_config = AgentCoreMemoryConfig(
-        memory_id=MEM_ID,
-        session_id=SESSION_ID,
-        actor_id=ACTOR_ID,
+        memory_id=os.environ["MEMORY_ID"],
+        session_id=session_id,
+        actor_id=actor_id,
         retrieval_config={
             "/preferences/{actorId}": RetrievalConfig(
                 top_k=5,
@@ -193,7 +204,7 @@ def invoke_agent(payload):
     # セッションマネージャを定義
     session_manager = AgentCoreMemorySessionManager(
         agentcore_memory_config=agentcore_memory_config,
-        region_name="us-west-2"
+        region_name=os.environ["MEMORY_REGION"]
     )
 
     agent = Agent(
@@ -347,8 +358,128 @@ npx cdk deploy AgentStack
 
 ## 3.4. AgentCore をテスト実行
 
+### ローカルでテストする場合
+
+今回の構成の場合、一度 AWS CDK をデプロイして AgentCore Memory を作成してしまえば、以降はローカルでもテスト出来る。
+API サーバの起動とテスト用で、ターミナルを2つ起動する。
+
+**Fast API 用ターミナル**:
+
+```bash
+# /app ディレクトリへ移動
+# agents 直下にいる事を想定
+cd lib/app
+
+export MEMORY_ID=xxxxxx
+uv run python sample_agent.py
+```
+
+別のターミナルを開いて、以下を実行。
+
+```bash
+curl -X POST http://localhost:8080/invocations \
+    -H "Content-Type: application/json" \
+    -d '{"sessionId": "52433935-c9fd-480c-e3d2-d8a91369b3db", "actorId": "issei-hamada", "prompt": "今日の横浜の天気を教えて下さい。"}' | jq -r .
+```
+
 ### デプロイした AgentCore Runtime を実行
 
-```sh
-agentcore invoke '{"sessionId": "52433935-c9fd-480c-e3d2-d8a91369b3db", "prompt": "今日の横浜の天気を教えて下さい。"}'
+AWS SDK を使って実行すると楽。
+今回はテスト用スクリプトを使ってテストする。
+
+```bash
+# プロジェクトルート直下 /tests に移動
+# agents 配下にいると想定
+cd ../tests
+
+pwd
+# hamazlabo-developing-ai-agent/tests
+
+uv run python tests/test_invoke_agent.py \
+  --actor-id "user-001" \
+  --session-id "52433935-c9fd-480c-e3d2-d8a91369b3db" \
+  --prompt "今日の横浜の天気を教えて下さい。"
 ```
+
+今回は、全ての結果がまとめて返却されたはず(同期レスポンス)。
+
+### テストコード解説
+
+基本的には、以下2ステップを実行している。
+
+1. AgentStack から AgentCore Runtime の ARN を取得
+2. boto3 で invoke_agent_runtime を実行
+
+**invoke_agent_runtime**:
+
+```py
+# ペイロードを設定
+payload = {
+    "prompt": prompt,
+    "sessionId": session_id,
+    "actorId": actor_id,
+}
+
+# AWS SDK 実行
+client = boto3.client("bedrock-agentcore")
+response = client.invoke_agent_runtime(
+    agentRuntimeArn=agent_runtime_arn,
+    contentType="application/json",
+    payload=json.dumps(payload),
+)
+```
+
+### Tips: AgentCore を使う場合のセッション管理
+
+AgentCore Runtime は、ネイティブ機能としてセッション管理機能を持っている。
+Runtime を呼び出すと、仮想 VM が起動して処理を実行するが、VM は処理後も待機する。
+その間に、同じ runtimeSessionId を指定する事で待機中の VM に再接続出来る。
+
+この時、前のセッションで起動した AI エージェントインスタンスが残っていれば、セッションマネージャを使わずに会話を続けられる。
+
+※ インスタンス=プログラミング用語で、クラスから作成したオブジェクト
+
+この手法を使う場合、Strands Agents 側でも AI エージェントインスタンスの**スコープ**を意識した実装が必要。
+
+**スコープとは?**:
+Python では、変数が定義された場所によって、その変数が参照できる範囲（スコープ）が決まる。主なスコープは以下の通り。
+
+- **グローバルスコープ**: モジュール（ファイル）の直下で定義された変数。プログラムが終了するまで保持される。
+- **ローカルスコープ**: 関数内で定義された変数。関数の実行が終わると破棄される。
+
+**例: セッション終了後もインスタンスが残るパターン**:
+
+```py
+agent = Agent() # VM 起動時に定義、関数が終了しても破棄されない
+
+def invoke_agent(payload): # 実行の度に呼び出され、結果は破棄される
+    response = agent(payload)
+    return response
+
+response = invoke_agent(payload)
+
+```
+
+**例: 関数実行の度に新しいインスタンスを作成するパターン**:
+
+```py
+def invoke_agent(payload):
+    agent = Agent() # 実行の度に呼び出され、処理終了後破棄される
+    response = agent(payload)
+    return response
+
+response = invoke_agent(payload)
+```
+
+**まとめ**:
+
+基本的には記憶の永続化が必要なケースが多く、Memory を使う事になる。
+しかし、不特定多数のユーザから問い合わせを受ける問い合わせエージェントのような、短期間だけ会話が出来ればいい場合、runtimeSessionId を使ったセッション管理で事足りる事もある。
+
+ちなみに AWS Lambda でウォームスタートを引いた場合、同じようにハンドラ関数外(グローバルスコープ)に定義した変数は引き継がれる。
+Python に限らずコードを書く際は変数のスコープと、ライフサイクルを意識した方が良い。
+
+---
+
+以上で、本手順は完了です。
+お疲れ様でした！
