@@ -371,6 +371,7 @@ API サーバの起動とテスト用で、ターミナルを2つ起動する。
 cd lib/app
 
 export MEMORY_ID=xxxxxx
+export MEMORY_REGION=ap-northeast-1
 uv run python sample_agent.py
 ```
 
@@ -395,7 +396,7 @@ cd ../tests
 pwd
 # hamazlabo-developing-ai-agent/tests
 
-uv run python tests/test_invoke_agent.py \
+uv run python test_invoke_agent.py \
   --actor-id "user-001" \
   --session-id "52433935-c9fd-480c-e3d2-d8a91369b3db" \
   --prompt "今日の横浜の天気を教えて下さい。"

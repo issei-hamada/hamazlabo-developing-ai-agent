@@ -46,7 +46,7 @@ source $HOME/.local/bin/env
 
 ```sh
 uv --version
-# 期待値: uv 0.8.24
+# 期待値: uv 0.10.0
 ```
 
 uv のバージョンが表示されれば成功。
@@ -56,6 +56,9 @@ uv のバージョンが表示されれば成功。
 初期プロジェクトを作成する。
 
 ```sh
+# プロジェクトディレクトリを作成
+mkdir agents/lib/app
+
 # プロジェクトディレクトリへ移動
 cd agents/lib/app
 
