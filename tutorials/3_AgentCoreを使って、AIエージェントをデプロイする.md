@@ -479,6 +479,18 @@ response = invoke_agent(payload)
 ちなみに AWS Lambda でウォームスタートを引いた場合、同じようにハンドラ関数外(グローバルスコープ)に定義した変数は引き継がれる。
 Python に限らずコードを書く際は変数のスコープと、ライフサイクルを意識した方が良い。
 
+## 3.5. 環境のクリーンアップ
+
+/agents 配下で、次のコマンドを実行する
+
+```bash
+# ECR スタックを削除
+npx cdk destroy EcrStack
+
+# Agent スタックを削除
+npx cdk destroy AgentStack
+```
+
 ---
 
 以上で、本手順は完了です。
